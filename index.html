@@ -762,8 +762,9 @@
     </div>
 
     <script>
-        // DOM Elements
-        const loginPage = document.getElementById('login-page');
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const loginPage = document.getElementById('login-page');
         const appContainer = document.getElementById('app-container');
         const loginForm = document.getElementById('login-form');
         const menuToggle = document.getElementById('menu-toggle');
@@ -976,6 +977,8 @@
             sidebar.classList.remove('open');
             overlay.classList.add('hidden');
         }
+        
+        }); // End DOMContentLoaded
         
         // Check authentication on page load
         window.addEventListener('load', async function() {
