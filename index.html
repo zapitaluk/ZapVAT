@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZapVAT | Modern VAT Returns Solution</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #6b46c1 0%, #3b82f6 100%);
+        }
+        
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+        
+        .vatsub-box:hover {
+            transform: translateY(-5px);
+            transition: transform 0.2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Login Page -->
+    <div id="login-page" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <div class="flex justify-center mb-4">
+                    <div class="gradient-bg p-3 rounded-xl inline-flex">
+                        <i class="fas fa-bolt text-white text-3xl"></i>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">Welcome to ZapVAT</h1>
+                <p class="text-gray-600">A Zapital company</p>
+                <div class="mt-4">
+                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">HMRC Certified</span>
+                </div>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                    <input type="email" id="email" name="email" required 
+                           class="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           class="form-input w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" 
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" 
+                            class="w-full gradient-bg text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition duration-200">
+                        Sign in
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    New to ZapVAT? <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Get started</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container (hidden by default) -->
+    <div id="app-container" class="hidden">
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden fixed top-4 left-4 z-50">
+            <button id="menu-toggle" class="p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <div class="sidebar fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-40 p-4 md:translate-x-0">
+            <div class="flex items-center mb-8 p-2">
+                <div class="gradient-bg p-2 rounded-lg mr-3">
+                    <i class="fas fa-bolt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">ZapVAT</h1>
+                    <p class="text-xs text-gray-500">by Zapital</p>
+                </div>
+            </div>
+            
+            <nav class="space-y-1">
+                <a href="#" id="nav-dashboard" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700">
+                    <i class="fas fa-home mr-3 text-indigo-500"></i>
+                    Dashboard
+                </a>
+                <a href="#" id="nav-new-return" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-plus-circle mr-3 text-gray-500"></i>
+                    New VAT Return
+                </a>
+                <a href="#" id="nav-history" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-history mr-3 text-gray-500"></i>
+                    Submission History
+                </a>
+                <a href="#" id="nav-settings" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-cog mr-3 text-gray-500"></i>
+                    Settings
+                </a>
+            </nav>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+                <div class="flex items-center">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User profile" class="w-10 h-10 rounded-full">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700">Sarah Johnson</p>
+                        <a href="#" class="text-xs font-medium text-indigo-600 hover:text-indigo-400">Sign out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay for mobile menu -->
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+
+        <!-- Main Content -->
+        <div class="md:ml-64 transition-all duration-200">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1"></div> <!-- Spacer for center alignment -->
+                        <div class="flex items-center">
+                            <button class="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <i class="fas fa-bell text-xl"></i>
+                            </button>
+                            <button class="ml-3 p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <i class="fas fa-question-circle text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <!-- New VAT Return Form (default view) -->
+                <div id="vat-form-container" class="fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Submit VAT Return</h2>
+                        <div class="text-sm text-gray-500">
+                            <span class="hidden md:inline">Reporting period: </span>
+                            <span class="font-semibold">01/04/2023 - 30/06/2023</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Box Values</h3>
+                            <p class="mt-1 text-sm text-gray-500">Enter the amounts for each box on your VAT return.</p>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-5">
+                            <form id="vat-return-form">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="box1" class="block text-sm font-medium text-gray-700 mb-1">Box 1 - VAT due on sales</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box1" name="box1" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box2" class="block text-sm font-medium text-gray-700 mb-1">Box 2 - VAT due on acquisitions</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box2" name="box2" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box3" class="block text-sm font-medium text-gray-700 mb-1">Box 3 - Total VAT due</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box3" name="box3" disabled
+                                                   class="form-input block w-full pl-8 pr-12 bg-gray-100 text-gray-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box4" class="block text-sm font-medium text-gray-700 mb-1">Box 4 - VAT reclaimed</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box4" name="box4" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box5" class="block text-sm font-medium text-gray-700 mb-1">Box 5 - Net VAT</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box5" name="box5" disabled
+                                                   class="form-input block w-full pl-8 pr-12 bg-gray-100 text-gray-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box6" class="block text-sm font-medium text-gray-700 mb-1">Box 6 - Total sales (excl. VAT)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box6" name="box6" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box7" class="block text-sm font-medium text-gray-700 mb-1">Box 7 - Total purchases (excl. VAT)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box7" name="box7" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box8" class="block text-sm font-medium text-gray-700 mb-1">Box 8 - Acquisitions from EU</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box8" name="box8" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="box9" class="block text-sm font-medium text-gray-700 mb-1">Box 9 - Sales to EU</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">£</span>
+                                            <input type="number" id="box9" name="box9" 
+                                                   class="form-input block w-full pl-8 pr-12 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-8 pt-5 border-t border-gray-200">
+                                    <div class="flex justify-end">
+                                        <button type="button" 
+                                                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" 
+                                                class="ml-3 gradient-bg py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Submit to HMRC
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white shadow rounded-lg overflow-hidden">
+                        <div class="p-6">
+                            <h3 class="text-lg font-medium text-gray-900">Live Calculation</h3>
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-500">Box 1 + Box 2 = Box 3</div>
+                                    <div class="mt-1 text-xl font-semibold">
+                                        <span id="cal-box1">0.00</span> + <span id="cal-box2">0.00</span> = <span id="cal-box3">0.00</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-500">Box 3 - Box 4 = Box 5</div>
+                                    <div class="mt-1 text-xl font-semibold">
+                                        <span id="cal-box3-2">0.00</span> - <span id="cal-box4">0.00</span> = <span id="cal-box5">0.00</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-500">Total VAT</div>
+                                    <div class="mt-1 text-xl font-semibold">
+                                        £ <span id="cal-total">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submission History (hidden by default) -->
+                <div id="history-container" class="hidden fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Submission History</h2>
+                        <div class="flex items-center">
+                            <button id="filter-toggle" class="flex items-center text-sm text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-filter mr-1"></i>
+                                Filter
+                            </button>
+                            <div id="filter-dropdown" class="hidden absolute mt-10 right-0 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                <div class="p-3">
+                                    <div class="mb-2">
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">Period</label>
+                                        <select class="form-select block w-full py-1 px-2 border border-gray-300 rounded text-sm">
+                                            <option>Last 3 months</option>
+                                            <option>Last 6 months</option>
+                                            <option>Last 12 months</option>
+                                            <option>Custom range</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                                        <select class="form-select block w-full py-1 px-2 border border-gray-300 rounded text-sm">
+                                            <option>All statuses</option>
+                                            <option>Submitted</option>
+                                            <option>Pending</option>
+                                            <option>Failed</option>
+                                        </select>
+                                    </div>
+                                    <button class="mt-3 w-full bg-indigo-600 text-white py-1 px-2 rounded text-sm">
+                                        Apply filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <div class="divide-y divide-gray-200">
+                            <!-- History Item -->
+                            <div class="p-6 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Submitted
+                                            </span>
+                                            <span class="ml-2 text-sm text-gray-500">APR-JUN 2023</span>
+                                        </div>
+                                        <h3 class="mt-1 text-sm font-medium text-gray-900">
+                                            VAT Return Q2 2023
+                                        </h3>
+                                        <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-check-circle text-green-500 mr-1.5"></i>
+                                                HMRC Reference: 123456789012
+                                            </div>
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt text-gray-400 mr-1.5"></i>
+                                                Submitted on 30 Jun 2023
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 md:mt-0 md:ml-4 flex flex-shrink-0 items-center space-x-2">
+                                        <button type="button" onclick="viewVatReturn(1)"
+                                                class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            View details
+                                        </button>
+                                        <button type="button" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- History Item -->
+                            <div class="p-6 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Submitted
+                                            </span>
+                                            <span class="ml-2 text-sm text-gray-500">JAN-MAR 2023</span>
+                                        </div>
+                                        <h3 class="mt-1 text-sm font-medium text-gray-900">
+                                            VAT Return Q1 2023
+                                        </h3>
+                                        <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-check-circle text-green-500 mr-1.5"></i>
+                                                HMRC Reference: 123456789011
+                                            </div>
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt text-gray-400 mr-1.5"></i>
+                                                Submitted on 31 Mar 2023
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 md:mt-0 md:ml-4 flex flex-shrink-0 items-center space-x-2">
+                                        <button type="button" onclick="viewVatReturn(2)"
+                                                class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            View details
+                                        </button>
+                                        <button type="button" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- History Item -->
+                            <div class="p-6 hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Pending
+                                            </span>
+                                            <span class="ml-2 text-sm text-gray-500">OCT-DEC 2022</span>
+                                        </div>
+                                        <h3 class="mt-1 text-sm font-medium text-gray-900">
+                                            VAT Return Q4 2022
+                                        </h3>
+                                        <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-clock text-yellow-500 mr-1.5"></i>
+                                                Processing at HMRC
+                                            </div>
+                                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                                <i class="fas fa-calendar-alt text-gray-400 mr-1.5"></i>
+                                                Submitted on 31 Dec 2022
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 md:mt-0 md:ml-4 flex flex-shrink-0 items-center space-x-2">
+                                        <button type="button" onclick="viewVatReturn(3)"
+                                                class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            View details
+                                        </button>
+                                        <button type="button" class="p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                            <div class="flex-1 flex justify-between sm:hidden">
+                                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Previous
+                                </a>
+                                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Next
+                                </a>
+                            </div>
+                            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-700">
+                                        Showing
+                                        <span class="font-medium">1</span>
+                                        to
+                                        <span class="font-medium">3</span>
+                                        of
+                                        <span class="font-medium">8</span>
+                                        results
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Previous</span>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                        <a href="#" aria-current="page" class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            1
+                                        </a>
+                                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            2
+                                        </a>
+                                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                            3
+                                        </a>
+                                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- VAT Return Detail (hidden by default) -->
+                <div id="return-detail-container" class="hidden fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <button onclick="backToHistory()" class="flex items-center text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Back to history
+                        </button>
+                        <div>
+                            <button class="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button class="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-800">VAT Return Q2 2023</h2>
+                                    <div class="mt-1 flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-calendar-alt text-gray-400 mr-1.5"></i>
+                                        Period: 01 Apr 2023 - 30 Jun 2023
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Submitted
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 px-6 py-5">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Return Summary</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                    <div class="text-sm text-gray-500 mb-1">HMRC Reference</div>
+                                    <div class="text-lg font-semibold">123456789012</div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                    <div class="text-sm text-gray-500 mb-1">Submitted on</div>
+                                    <div class="text-lg font-semibold">30 Jun 2023 at 10:42 AM</div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                    <div class="text-sm text-gray-500 mb-1">Payment due</div>
+                                    <div class="text-lg font-semibold">£1,284.50 by 07 Aug 2023</div>
+                                </div>
+                            </div>
+                            
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Box Values</h3>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Box
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Description
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Amount (£)
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                1
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                VAT due on sales
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                3,284.50
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                2
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                VAT due on acquisitions
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                0.00
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                3
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Total VAT due
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                3,284.50
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                4
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                VAT reclaimed
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                2,000.00
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                5
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Net VAT
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                1,284.50
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                6
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Total sales (excl. VAT)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                45,000.00
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                7
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Total purchases (excl. VAT)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                28,000.00
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                8
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Acquisitions from EU
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                0.00
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                9
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Sales to EU
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                                                0.00
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-8 border-t border-gray-200 pt-5">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">Payment Information</h3>
+                                        <div class="text-sm text-gray-500">
+                                            <p>No payment details available for this return.</p>
+                                            <p class="mt-1">Make any payment due by 07 Aug 2023.</p>
+                                        </div>
+                                    </div>
+                                    <button class="h-fit gradient-bg text-white font-medium py-2 px-4 rounded-md hover:opacity-90 transition duration-200">
+                                        View payment options
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submission Confirmation Modal (hidden by default) -->
+                <div id="confirmation-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+                    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                        </div>
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div class="sm:flex sm:items-start">
+                                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                            VAT Return Submitted Successfully
+                                        </h3>
+                                        <div class="mt-2">
+                                            <p class="text-sm text-gray-500">
+                                                Your VAT return for Q2 2023 has been successfully submitted to HMRC.
+                                            </p>
+                                            <div class="mt-4 bg-gray-50 p-3 rounded-md">
+                                                <div class="flex justify-between">
+                                                    <span class="text-sm text-gray-500">Reference:</span>
+                                                    <span class="text-sm font-medium">123456789012</span>
+                                                </div>
+                                                <div class="flex justify-between mt-1">
+                                                    <span class="text-sm text-gray-500">Amount due:</span>
+                                                    <span class="text-sm font-medium font-mono">£1,284.50</span>
+                                                </div>
+                                                <div class="flex justify-between mt-1">
+                                                    <span class="text-sm text-gray-500">Due by:</span>
+                                                    <span class="text-sm font-medium">07 Aug 2023</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button type="button" onclick="closeModal()" class="w-full gradient-bg text-white rounded-md px-4 py-2 text-base font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                    View Submission
+                                </button>
+                                <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+        const navDashboard = document.getElementById('nav-dashboard');
+        const navNewReturn = document.getElementById('nav-new-return');
+        const navHistory = document.getElementById('nav-history');
+        const vatFormContainer = document.getElementById('vat-form-container');
+        const historyContainer = document.getElementById('history-container');
+        const returnDetailContainer = document.getElementById('return-detail-container');
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const filterToggle = document.getElementById('filter-toggle');
+        const filterDropdown = document.getElementById('filter-dropdown');
+        const vatReturnForm = document.getElementById('vat-return-form');
+        
+        // Login Form Submission
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // In a real app, you would verify credentials here
+            loginPage.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            
+            // Show VAT form by default
+            vatFormContainer.classList.remove('hidden');
+            historyContainer.classList.add('hidden');
+            returnDetailContainer.classList.add('hidden');
+        });
+        
+        // Mobile Menu Toggle
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        });
+        
+        // Close mobile menu when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        });
+        
+        // Navigation
+        navDashboard.addEventListener('click', function(e) {
+            e.preventDefault();
+            showVatForm();
+        });
+        
+        navNewReturn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showVatForm();
+        });
+        
+        navHistory.addEventListener('click', function(e) {
+            e.preventDefault();
+            showHistory();
+        });
+        
+        // Filter toggle
+        filterToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('hidden');
+        });
+        
+        // Close filter dropdown when clicking elsewhere
+        document.addEventListener('click', function() {
+            if (!filterDropdown.classList.contains('hidden')) {
+                filterDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Prevent filter dropdown from closing when clicking inside it
+        filterDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // VAT Form Calculations
+        const boxInputs = ['box1', 'box2', 'box4', 'box6', 'box7', 'box8', 'box9'];
+        
+        boxInputs.forEach(boxId => {
+            document.getElementById(boxId).addEventListener('input', calculateTotals);
+        });
+        
+        function calculateTotals() {
+            const box1 = parseFloat(document.getElementById('box1').value) || 0;
+            const box2 = parseFloat(document.getElementById('box2').value) || 0;
+            const box4 = parseFloat(document.getElementById('box4').value) || 0;
+            
+            const box3 = box1 + box2;
+            const box5 = box3 - box4;
+            
+            document.getElementById('box3').value = box3.toFixed(2);
+            document.getElementById('box5').value = box5.toFixed(2);
+            
+            // Update calculation display
+            document.getElementById('cal-box1').textContent = box1.toFixed(2);
+            document.getElementById('cal-box2').textContent = box2.toFixed(2);
+            document.getElementById('cal-box3').textContent = box3.toFixed(2);
+            document.getElementById('cal-box3-2').textContent = box3.toFixed(2);
+            document.getElementById('cal-box4').textContent = box4.toFixed(2);
+            document.getElementById('cal-box5').textContent = box5.toFixed(2);
+            document.getElementById('cal-total').textContent = box5.toFixed(2);
+        }
+        
+        // VAT Form Submission
+        vatReturnForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // In a real app, you would call the HMRC API here
+            confirmationModal.classList.remove('hidden');
+        });
+        
+        // Modal Close
+        function closeModal() {
+            confirmationModal.classList.add('hidden');
+            showHistory();
+        }
+        
+        // View VAT Return Detail
+        function viewVatReturn(id) {
+            vatFormContainer.classList.add('hidden');
+            historyContainer.classList.add('hidden');
+            returnDetailContainer.classList.remove('hidden');
+        }
+        
+        // Back to History
+        function backToHistory() {
+            returnDetailContainer.classList.add('hidden');
+            historyContainer.classList.remove('hidden');
+        }
+        
+        // Show VAT Form
+        function showVatForm() {
+            vatFormContainer.classList.remove('hidden');
+            historyContainer.classList.add('hidden');
+            returnDetailContainer.classList.add('hidden');
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+        
+        // Show History
+        function showHistory() {
+            vatFormContainer.classList.add('hidden');
+            historyContainer.classList.remove('hidden');
+            returnDetailContainer.classList.add('hidden');
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
