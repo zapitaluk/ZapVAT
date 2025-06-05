@@ -772,17 +772,27 @@
         const vatReturnForm = document.getElementById('vat-return-form');
         
         // Login Form Submission
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // In a real app, you would verify credentials here
-            loginPage.classList.add('hidden');
-            appContainer.classList.remove('hidden');
+            const email = document.getElementById('email').value;
+            // For demo - in production, get VRN from user input or profile
+            const vrn = '123456789'; 
             
-            // Show VAT form by default
-            vatFormContainer.classList.remove('hidden');
-            historyContainer.classList.add('hidden');
-            returnDetailContainer.classList.add('hidden');
+            try {
+                const button = e.target.querySelector('button[type="submit"]');
+                button.textContent = 'Connecting to HMRC...';
+                button.disabled = true;
+                
+                const { authUrl } = await window.zapVAT.initiateLogin(vrn);
+                window.location.href = authUrl;
+                
+            } catch (error) {
+                alert(`Login failed: ${error.message}`);
+                const button = e.target.querySelector('button[type="submit"]');
+                button.textContent = 'Sign in';
+                button.disabled = false;
+            }
         });
         
         // Mobile Menu Toggle
@@ -860,11 +870,48 @@
         }
         
         // VAT Form Submission
-        vatReturnForm.addEventListener('submit', function(e) {
+        vatReturnForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // In a real app, you would call the HMRC API here
-            confirmationModal.classList.remove('hidden');
+            if (!window.zapVAT.isAuthenticated()) {
+                alert('Please log in first');
+                return;
+            }
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            try {
+                submitButton.textContent = 'Submitting to HMRC...';
+                submitButton.disabled = true;
+                
+                // Collect form data
+                const vatReturn = {
+                    periodKey: document.getElementById('period-key').value || 'A001',
+                    vatDueSales: parseFloat(document.getElementById('box1').value) || 0,
+                    vatDueAcquisitions: parseFloat(document.getElementById('box2').value) || 0,
+                    totalVatDue: parseFloat(document.getElementById('box3').value) || 0,
+                    vatReclaimedCurrPeriod: parseFloat(document.getElementById('box4').value) || 0,
+                    netVatDue: parseFloat(document.getElementById('box5').value) || 0,
+                    totalValueSalesExVAT: parseFloat(document.getElementById('box6').value) || 0,
+                    totalValuePurchasesExVAT: parseFloat(document.getElementById('box7').value) || 0,
+                    totalValueGoodsSuppliedExVAT: parseFloat(document.getElementById('box8').value) || 0,
+                    totalAcquisitionsExVAT: parseFloat(document.getElementById('box9').value) || 0,
+                    finalised: true
+                };
+                
+                const result = await window.zapVAT.submitReturn(vatReturn);
+                
+                // Show success message with HMRC response
+                alert(`VAT Return submitted successfully!\nForm Bundle: ${result.formBundleNumber}\nProcessing Date: ${result.processingDate}`);
+                confirmationModal.classList.remove('hidden');
+                
+            } catch (error) {
+                alert(`Failed to submit VAT return: ${error.message}`);
+            } finally {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
         });
         
         // Modal Close
@@ -903,6 +950,39 @@
             sidebar.classList.remove('open');
             overlay.classList.add('hidden');
         }
+        
+        // Check authentication on page load
+        window.addEventListener('load', async function() {
+            if (window.zapVAT.isAuthenticated()) {
+                try {
+                    const user = await window.zapVAT.getCurrentUser();
+                    // User is authenticated, show dashboard
+                    loginPage.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    vatFormContainer.classList.remove('hidden');
+                    historyContainer.classList.add('hidden');
+                    returnDetailContainer.classList.add('hidden');
+                    
+                    console.log('Authenticated user:', user);
+                } catch (error) {
+                    console.error('Authentication check failed:', error);
+                    // Token might be invalid, show login page
+                    window.zapVAT.logout();
+                }
+            }
+        });
+        
+        // Listen for authentication events
+        window.addEventListener('zapvat:authenticated', function() {
+            loginPage.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            vatFormContainer.classList.remove('hidden');
+            historyContainer.classList.add('hidden');
+            returnDetailContainer.classList.add('hidden');
+        });
     </script>
+    
+    <!-- API Client -->
+    <script src="/public/js/api-client.js"></script>
 </body>
 </html>
