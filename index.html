@@ -193,6 +193,15 @@
                         </div>
                         <div class="bg-gray-50 px-6 py-5">
                             <form id="vat-return-form">
+                                <!-- Period Key Field -->
+                                <div class="mb-6">
+                                    <label for="period-key" class="block text-sm font-medium text-gray-700 mb-1">Period Key</label>
+                                    <input type="text" id="period-key" name="period-key" value="A001" 
+                                           class="form-input block w-full focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+                                           placeholder="e.g., A001, 18A1, #001">
+                                    <p class="mt-1 text-xs text-gray-500">The ID code for the period this obligation belongs to</p>
+                                </div>
+                                
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label for="box1" class="block text-sm font-medium text-gray-700 mb-1">Box 1 - VAT due on sales</label>
@@ -775,6 +784,17 @@
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Check if API client is available
+            if (!window.zapVAT) {
+                // Fall back to original behavior - just show the dashboard
+                loginPage.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                vatFormContainer.classList.remove('hidden');
+                historyContainer.classList.add('hidden');
+                returnDetailContainer.classList.add('hidden');
+                return;
+            }
+            
             const email = document.getElementById('email').value;
             // For demo - in production, get VRN from user input or profile
             const vrn = '123456789'; 
@@ -873,6 +893,12 @@
         vatReturnForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            if (!window.zapVAT) {
+                // Fall back to original behavior - just show confirmation
+                confirmationModal.classList.remove('hidden');
+                return;
+            }
+            
             if (!window.zapVAT.isAuthenticated()) {
                 alert('Please log in first');
                 return;
@@ -953,7 +979,8 @@
         
         // Check authentication on page load
         window.addEventListener('load', async function() {
-            if (window.zapVAT.isAuthenticated()) {
+            // Only check auth if zapVAT client is available
+            if (window.zapVAT && window.zapVAT.isAuthenticated()) {
                 try {
                     const user = await window.zapVAT.getCurrentUser();
                     // User is authenticated, show dashboard
@@ -967,7 +994,7 @@
                 } catch (error) {
                     console.error('Authentication check failed:', error);
                     // Token might be invalid, show login page
-                    window.zapVAT.logout();
+                    if (window.zapVAT) window.zapVAT.logout();
                 }
             }
         });
@@ -983,6 +1010,6 @@
     </script>
     
     <!-- API Client -->
-    <script src="/public/js/api-client.js"></script>
+    <script src="/js/api-client.js"></script>
 </body>
 </html>
